@@ -1,0 +1,27 @@
+services:
+  pg-backend:
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
+    image: dhrubo020/pg-files:latest
+    ports:
+      - "3000:3000"
+    environment:
+      MONGO_URL: mongodb://mongo:27017/nestdb
+    volumes:
+      - ./storage:/app/storage # Maps your local 'storage' folder to the container's 'storage' folder
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./mongo-data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: nestdb
+
+volumes:
+  mongo-data:
+  storage:

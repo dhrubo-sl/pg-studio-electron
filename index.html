@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PG Studio Control Panel Setup</title>
+  </head>
+  <body>
+    <div>
+      <p>
+        Click to manage service. After installing visit
+        http://localhost:3000/api
+      </p>
+      <button onclick="runCommand('docker ps')">List</button>
+      <button onclick="runCommand('docker-compose up -d')">Install</button>
+      <button onclick="reinstall()">Reinstall</button>
+    </div>
+    <div>
+      <pre id="out"></pre>
+    </div>
+
+    <style>
+      #out {
+        max-height: 350px; /* Adjust this as needed */
+        overflow-y: auto;
+        border: 1px solid #ccc;
+        padding: 10px;
+        background-color: #f9f9f9;
+        font-family: monospace;
+      }
+    </style>
+
+    <script>
+      const { exec } = require("child_process");
+
+      async function reinstall() {
+        const isConfirm = window.confirm("Delete all previous data?");
+        if (isConfirm) {
+          document.getElementById("out").innerText = "";
+          const rmMongo = "rm -r mongo-data";
+          const rmStorage = "rm -r storage";
+          const dockerDown = "docker-compose down";
+          const dockerUp = "docker-compose up -d";
+          await runCommand(rmMongo);
+          await runCommand(rmStorage);
+          await runCommand(dockerDown);
+          await runCommand(dockerUp);
+        }
+      }
+
+      function autoScroll() {
+        const outputElement = document.getElementById("out");
+        outputElement.scrollTop = outputElement.scrollHeight;
+      }
+
+      function print(value) {
+        document.getElementById("out").innerText += `\n${value}`;
+        autoScroll();
+      }
+      function done() {
+        document.getElementById("out").innerText += `Done`;
+      }
+
+      async function runCommand(command) {
+        return new Promise((resolve, reject) => {
+          print(`Executing ${command}`);
+          exec(command, (error, stdout, stderr) => {
+            if (error) {
+              print(`Error: ${error.message}`);
+              resolve(true);
+              return;
+            }
+            if (stderr) {
+              print(`Stderr: ${stderr}`);
+              done();
+              resolve(true);
+              return;
+            }
+            print(stdout);
+            done();
+            resolve(true);
+          });
+        });
+      }
+    </script>
+  </body>
+</html>
